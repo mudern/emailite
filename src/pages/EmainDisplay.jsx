@@ -22,8 +22,8 @@ const EmailDisplay = () => {
                 setEmail(fetchedEmail);
                 setLoading(false);
 
-                // // 调用后端的 Tauri 命令标记邮件为已读
-                // await invoke('mark_email_as_read', { emailId: parseInt(id) });
+                // 调用后端的 Tauri 命令标记邮件为已读
+                await invoke('mark_email_as_read', { emailId: parseInt(id) });
             } catch (err) {
                 setError('Failed to fetch email');
                 setLoading(false);

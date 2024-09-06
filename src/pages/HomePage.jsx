@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Button, List, Select, message } from 'antd';
+import { Input, Button, List, Select, message, Pagination } from 'antd';
 import { ReloadOutlined, UserOutlined, FormOutlined } from '@ant-design/icons';
 import EmailPreview from '../component/EmailPreview.jsx';
 import { useNavigate } from 'react-router-dom';
@@ -10,16 +10,20 @@ const { Option } = Select;
 
 const HomePage = () => {
     const [loginVisible, setLoginVisible] = useState(false);
+    const [emails, setEmails] = useState([]); // 用于保存后端传来的邮件列表
     const [filterEmails, setFilterEmails] = useState([]);
     const [searchCategory, setSearchCategory] = useState('title');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchEmails = async () => {
             try {
-                // 然后再从数据库中获取邮件列表
                 const result = await invoke('get_email_list');
-                setFilterEmails(result);
+                const sortedEmails = result.sort((a, b) => new Date(b.sent_date) - new Date(a.sent_date));
+                setEmails(sortedEmails); // 保存到 emails 变量
+                setFilterEmails(sortedEmails);
             } catch (error) {
                 message.error('获取邮件失败');
                 console.error("Failed to fetch emails:", error);
@@ -30,13 +34,10 @@ const HomePage = () => {
     }, []);
 
     const handleSearch = async (value) => {
-        if(value.trim() === ''){
-            const result = await invoke('get_email_list');
-            setFilterEmails(result);
-            console.log("test")
-        }
-        else{
-            const filtered = filterEmails.filter(email => {
+        if (value.trim() === '') {
+            setFilterEmails(emails);
+        } else {
+            const filtered = emails.filter(email => {
                 if (searchCategory === 'date') {
                     return email.sent_date.includes(value);
                 } else if (searchCategory === 'body') {
@@ -56,7 +57,9 @@ const HomePage = () => {
         try {
             await invoke('load_mail_from_imap');
             const result = await invoke('get_email_list');
-            setFilterEmails(result);
+            const sortedEmails = result.sort((a, b) => new Date(b.sent_date) - new Date(a.sent_date));
+            setEmails(sortedEmails); // 更新 emails 变量
+            setFilterEmails(sortedEmails);
             message.success("获取邮件成功");
         } catch (error) {
             message.error('获取邮件失败');
@@ -84,11 +87,16 @@ const HomePage = () => {
         setSearchCategory(value);
     };
 
-    const preprocessEmails = (emails) => {
-        return emails.map(email => ({
-            ...email,
-            body: email.body || ' ' // 如果 email.body 为空，使用一个空格
-        }));
+    // 分页处理
+    const getPagedEmails = () => {
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        return filterEmails.slice(startIndex, endIndex);
+    };
+
+    const handlePageChange = (page, pageSize) => {
+        setCurrentPage(page);
+        setPageSize(pageSize);
     };
 
     return (
@@ -117,10 +125,17 @@ const HomePage = () => {
             </div>
             <List
                 itemLayout="horizontal"
-                dataSource={preprocessEmails(filterEmails)}
+                dataSource={getPagedEmails()} // 使用分页后的数据
                 renderItem={email => (
                     <EmailPreview key={email.id} email={email} onClick={() => handleClick(email.id)} />
                 )}
+            />
+            <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={filterEmails.length}
+                onChange={handlePageChange}
+                style={{ textAlign: 'center', marginTop: '16px' }}
             />
             <Login visible={loginVisible} onClose={handleLoginClose} />
         </>

@@ -99,7 +99,7 @@ pub(crate) fn get_emails(conn: &Connection) -> Result<Vec<Email>> {
 
 pub(crate) fn mark_as_read(conn: &Connection, email_id: i32) -> Result<()> {
     conn.execute(
-        "UPDATE emails SET isRead = 1 WHERE id = ?",
+        "UPDATE emails SET is_read = 1 WHERE id = ?",
         &[&email_id],
     )?;
     Ok(())

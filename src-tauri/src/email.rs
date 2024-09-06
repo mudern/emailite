@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use lettre::{Message, SmtpTransport, Transport};
 use lettre::transport::smtp::authentication::Credentials;
@@ -8,6 +8,7 @@ use rusqlite::Connection;
 
 use crate::db::{get_email_settings, save_email};
 use crate::models::Email;
+use crate::utils::deduplicate_emails;
 
 pub fn send_email(conn: &Connection, email: Email) -> Result<(), String> {
     // 获取电子邮件设置
@@ -57,14 +58,26 @@ pub fn fetch_emails(conn: &Connection) -> Result<(), String> {
     // 获取未读邮件
     let messages = imap_session.search("UNSEEN").map_err(|e| e.to_string())?;
 
+    // 用于存储邮件
+    let mut email_list = Vec::new();
+
     for message_id in messages.iter() {
         let messages = imap_session.fetch(message_id.to_string(), "RFC822").map_err(|e| e.to_string())?;
         let fetched_message = messages.iter().next().ok_or("No message found")?;
         let body = fetched_message.body().ok_or("No body found")?;
 
-        // 解析邮件并保存
+        // 解析邮件并存储
         let email_parsed = parse_mail(body).map_err(|e| e.to_string())?;
         let email = parse_email(email_parsed)?;
+
+        email_list.push(email);
+    }
+
+    // 进行去重处理
+    let unique_emails = deduplicate_emails(email_list);
+
+    // 保存去重后的邮件
+    for email in unique_emails {
         save_email(conn, &email).map_err(|e| e.to_string())?;
     }
 

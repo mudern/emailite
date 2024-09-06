@@ -5,9 +5,20 @@ import { ExclamationCircleTwoTone, CheckCircleTwoTone } from '@ant-design/icons'
 
 const EmailPreview = ({ email, isRead }) => {
     const navigate = useNavigate();
-
     const handleClick = () => {
         navigate(`/email/${email.id}`);
+    };
+    // 将 sent_date 转换为 Date 对象并格式化为 yyyy-mm-dd hh:mm
+    const formatDateTime = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false // 使用 24 小时制
+        });
     };
     return (
         <Card
@@ -18,6 +29,7 @@ const EmailPreview = ({ email, isRead }) => {
                 border: '1px solid #f0f0f0',
                 borderRadius: '4px',
                 position: 'relative', // 使绝对定位的图标生效
+                height:'120px'
             }}
             hoverable
         >
@@ -42,8 +54,12 @@ const EmailPreview = ({ email, isRead }) => {
                 color: '#888',
                 fontSize: '12px'
             }}>
-                <div>{email.sender}</div>
-                <div>{email.date}</div>
+                <div style={{
+                    textAlign: 'right', // 确保内容靠右对齐
+                }}>
+                    <div>{email.sender}</div>
+                    <div>{formatDateTime(email.sent_date)}</div>
+                </div>
             </div>
         </Card>
     );

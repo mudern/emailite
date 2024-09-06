@@ -707,6 +707,7 @@ checksum = "e079f19b08ca6239f47f8ba8509c11cf3ea30095831f7fed61441475edd8c449"
 name = "emailite"
 version = "0.1.0"
 dependencies = [
+ "hex",
  "imap",
  "lettre",
  "mailparse",
@@ -714,9 +715,9 @@ dependencies = [
  "rusqlite",
  "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-build",
- "uuid",
 ]
 
 [[package]]
