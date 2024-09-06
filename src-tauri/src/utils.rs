@@ -11,8 +11,8 @@ pub fn truncate_content(content: &str, max_length: usize) -> String {
 }
 
 // 用于生成邮件的唯一标识符
-fn generate_email_id(email: &Email) -> String {
-    format!("{}|{}|{}", email.sender, email.sent_date, email.subject)
+pub fn generate_email_id(email: &Email) -> String {
+    format!("{}|{}|{}|{}", email.sender, email.sent_date, email.subject, email.body)
 }
 
 // 去重邮件列表

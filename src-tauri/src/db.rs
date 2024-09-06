@@ -1,7 +1,8 @@
+use std::collections::HashSet;
 use rusqlite::params;
 use rusqlite::{Connection, Result};
 use crate::models::{Email, EmailSettings};
-use crate::utils::truncate_content;
+use crate::utils::{truncate_content,generate_email_id};
 
 pub(crate) fn init_db() -> Result<Connection> {
     let conn = Connection::open("sqlite.db")?;
@@ -130,4 +131,30 @@ pub fn delete_email_by_id_from_db(conn: &Connection, email_id: i32) -> Result<us
     let rows_affected = stmt.execute(params![email_id])?;
 
     Ok(rows_affected)
+}
+
+pub(crate) fn get_all_email_ids(conn: &Connection) -> Result<HashSet<String>> {
+    let mut stmt = conn.prepare("SELECT sender, sent_date, subject, body FROM emails")?;
+    let email_ids = stmt.query_map([], |row| {
+        let sender: String = row.get(0)?;
+        let sent_date: String = row.get(1)?;
+        let subject: String = row.get(2)?;
+        let body:String = row.get(3)?;
+        Ok(generate_email_id(&Email {
+            id: 0, // 不使用 id
+            sender,
+            sent_date,
+            subject,
+            body,
+            attachments: None,
+            is_read: false,
+        }))
+    })?;
+
+    let mut ids = HashSet::new();
+    for id in email_ids {
+        ids.insert(id?);
+    }
+
+    Ok(ids)
 }

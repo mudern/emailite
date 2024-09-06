@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use lettre::{Message, SmtpTransport, Transport};
 use lettre::transport::smtp::authentication::Credentials;
@@ -6,9 +6,9 @@ use mailparse::{parse_mail, ParsedMail};
 use native_tls::TlsConnector;
 use rusqlite::Connection;
 
-use crate::db::{get_email_settings, save_email};
+use crate::db::{get_all_email_ids, get_email_settings, save_email};
 use crate::models::Email;
-use crate::utils::deduplicate_emails;
+use crate::utils::generate_email_id;
 
 pub fn send_email(conn: &Connection, email: Email) -> Result<(), String> {
     // 获取电子邮件设置
@@ -66,18 +66,23 @@ pub fn fetch_emails(conn: &Connection) -> Result<(), String> {
         let fetched_message = messages.iter().next().ok_or("No message found")?;
         let body = fetched_message.body().ok_or("No body found")?;
 
-        // 解析邮件并存储
+        // 解析邮件
         let email_parsed = parse_mail(body).map_err(|e| e.to_string())?;
         let email = parse_email(email_parsed)?;
 
         email_list.push(email);
     }
 
-    // 进行去重处理
-    let unique_emails = deduplicate_emails(email_list);
+    // 获取数据库中所有邮件的唯一标识符
+    let existing_email_ids = get_all_email_ids(conn).map_err(|e| e.to_string())?;
 
-    // 保存去重后的邮件
-    for email in unique_emails {
+    // 过滤出唯一标识符不在数据库中的新邮件
+    let new_emails: Vec<Email> = email_list.into_iter()
+        .filter(|email| !existing_email_ids.contains(&generate_email_id(email)))
+        .collect();
+
+    // 保存新增的邮件
+    for email in new_emails {
         save_email(conn, &email).map_err(|e| e.to_string())?;
     }
 
