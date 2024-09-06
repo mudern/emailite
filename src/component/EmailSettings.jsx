@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Modal, Form, Input, Button, message } from 'antd';
 import { invoke } from '@tauri-apps/api/tauri';
 
@@ -22,11 +22,11 @@ const EmailSettings = ({ visible, onClose }) => {
 
             // 调用 Tauri 命令保存设置
             await invoke('save_email_settings', { settings });
-            message.success('Settings saved successfully');
+            message.success('设置保存成功');
             onClose();
         } catch (error) {
             console.error("Failed to save settings:", error);
-            message.error('Failed to save settings');
+            message.error('设置保存失败');
         }
     };
 
@@ -37,7 +37,7 @@ const EmailSettings = ({ visible, onClose }) => {
 
     return (
         <Modal
-            title="Email Settings"
+            title="邮箱信息设置"
             visible={visible}
             onCancel={onClose}
             footer={null}

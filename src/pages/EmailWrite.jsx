@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { Input, Button, Form, message, Upload, Modal } from 'antd';
+import { Input, Button, Form, message, Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { UploadOutlined } from '@ant-design/icons';
-import { invoke } from '@tauri-apps/api/tauri';
+import {invoke} from "@tauri-apps/api";
 
 const { TextArea } = Input;
 
 const EmailWrite = () => {
     const [form] = Form.useForm();
-    const [attachments, setAttachments] = useState([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isConfirmVisible, setIsConfirmVisible] = useState(false);
     const navigate = useNavigate();
@@ -33,7 +31,7 @@ const EmailWrite = () => {
                 sent_date: new Date().toISOString(),
                 subject: values.subject,
                 body: values.content,
-                attachments: attachments.length > 0 ? JSON.stringify(attachments.map(file => file.originFileObj.name)) : null,
+                attachments: null, // 不再处理附件
                 is_read: false
             };
 
@@ -52,10 +50,6 @@ const EmailWrite = () => {
 
     const handleConfirmCancel = () => {
         navigate(-1);
-    };
-
-    const handleUploadChange = ({ fileList }) => {
-        setAttachments(fileList);
     };
 
     return (
@@ -88,17 +82,6 @@ const EmailWrite = () => {
                     rules={[{ required: true, message: '请输入邮件内容' }]}
                 >
                     <TextArea rows={10} placeholder="输入邮件内容" />
-                </Form.Item>
-                <Form.Item>
-                    <Upload
-                        multiple
-                        beforeUpload={() => true}
-                        onChange={handleUploadChange}
-                        fileList={attachments}
-                        showUploadList={{ showPreviewIcon: true }}
-                    >
-                        <Button icon={<UploadOutlined />}>上传附件</Button>
-                    </Upload>
                 </Form.Item>
                 <Form.Item>
                     <Button type="primary" onClick={handleSend} style={{ marginRight: '8px' }}>
