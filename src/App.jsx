@@ -4,7 +4,7 @@ import { invoke } from "@tauri-apps/api/tauri";
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './pages/HomePage';
-import EmailDisplay from './pages/EmainDisplay.jsx';
+import EmailDisplay from './pages/EmailDisplay.jsx';
 import EmailWrite from "./pages/EmailWrite.jsx";
 
 const App = () => {
