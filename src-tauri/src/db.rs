@@ -1,11 +1,19 @@
 use std::collections::HashSet;
-use rusqlite::params;
+
 use rusqlite::{Connection, Result};
+use rusqlite::params;
+use tauri::api::path::home_dir;
+
 use crate::models::{Email, EmailSettings};
-use crate::utils::{truncate_content,generate_email_id};
+use crate::utils::{generate_email_id, truncate_content};
 
 pub(crate) fn init_db() -> Result<Connection> {
-    let conn = Connection::open("sqlite.db")?;
+    // 获取数据库存储路径
+    let mut db_path = home_dir().expect("Failed to get home directory");
+    db_path.push("sqlite.db"); // 将数据库文件名添加到路径
+
+    // 打开数据库连接
+    let conn = Connection::open(db_path)?;
 
     // 创建 email_settings 表
     conn.execute(
